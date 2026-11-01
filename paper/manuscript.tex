@@ -1,0 +1,531 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, booktabs, graphicx, hyperref, xcolor}
+\usepackage{natbib}
+\bibliographystyle{plainnat}
+\newcommand{\lamhat}{\hat{\lambda}}
+\title{No Eligible Populations: A Pre-Registered Feasibility Census\\ for Trajectory-Level Conformal Risk Control on Public Agent Traces}
+\author{Ranadhir Ghosh\\ FIS Global}
+\date{}
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Conformal risk control (CRC) can in principle certify an agent
+pipeline's trajectory-level failure risk at a pre-set level
+$\alpha$, abstaining on trajectories it cannot certify. Whether
+that guarantee can be exercised \emph{honestly} on the agent
+trajectory corpora the field actually has is an empirical
+question that is usually answered by shopping for a corpus that
+works. We answer it the other way: we pre-registered a
+feasibility census --- frozen data floors (exact Clopper--Pearson
+split sizes, a pre-specified base-failure band, task-grouped
+disjoint splits), a frozen outcome-binarisation rule that
+refuses post-hoc interpretation, and a frozen eligibility
+decision table --- over the nine public software-engineering
+agent populations that survive a counted-evidence screen
+(332{,}499 trajectories in two artefact families). \textbf{No
+population is eligible.} All six Claude cells of the SWE-smith
+trajectory collection have base failure rates of 0.545--0.610,
+above the pre-registered 0.50 ceiling; all three CoderForge
+source populations carry an outcome value ($-1.0$, on
+0.25--0.84\% of rows) that appears nowhere in the artefact
+documentation and that the frozen binarisation may not
+interpret. The result is a registered H-DATA outcome: the
+binding constraints on trajectory-level CRC today are data-side
+and specific --- outcome encodings and base-rate concentration
+--- not the guarantee machinery, which we verify controls risk
+on planted-signal synthetic traces and which previously ran
+end-to-end (to a negative verdict) on the one corpus ever
+attempted. We report the full census, the counterfactual rates
+that make the cost of the discipline visible, and three
+recommendations for trajectory-corpus publishers.
+\end{abstract}
+
+\section{Introduction}
+
+An agent that acts over many steps fails or succeeds as a
+\emph{trajectory}, and a deployment guarantee worth having is a
+statement about trajectories: \emph{among the trajectories this
+system accepts, the failure rate is at most $\alpha$} --- with
+abstention, not silent risk, as the price of the guarantee.
+Conformal risk control \citep{angelopoulos2022conformal}
+supplies exactly this shape of statement for a scalar score:
+choose a threshold on held-out calibration data so that the
+expected loss is controlled at $\alpha$ with a finite-sample,
+distribution-free correction. Lifted to agent traces --- a
+per-trajectory risk score, a calibration split, an abstention
+rule --- it is the natural certification layer for agentic
+systems, and learned per-step scorers in the style of process
+reward models \citep{lightman2023verify, wang2024mathshepherd,
+xi2025agentprm} are the natural scores to certify.
+
+What is missing is not the machinery but the evidence that the
+exercise is feasible on real recorded populations under honest
+rules. Feasibility here is fragile in a specific way: every
+degree of freedom in corpus choice --- which collection, which
+subset, what counts as a pass, which base rates are ``in
+range'' --- can be, and routinely is, resolved after seeing the
+data, at which point the guarantee's honesty is nominal. The
+remedy is the one this paper applies: freeze the feasibility
+criteria \emph{before} touching outcomes, as a pre-registration,
+and let the census fall where it falls.
+
+Our contribution is that census, executed end-to-end under a
+frozen registration (itself the third design iteration of a
+programme whose earlier pilot and design stages are part of the
+record). Over the nine public populations that survived a
+prior counting screen on documented evidence, the census finds
+\textbf{zero eligible populations}, for two disjoint,
+fully documented reasons: base-rate concentration above the
+registered ceiling in one family, and an uninterpretable
+outcome encoding in the other. Sections 2--4 give the machinery
+and the frozen protocol; Section 5 gives the census; Section 6
+discusses what the negative result does and does not establish;
+Section 7 states recommendations for corpus publishers. The
+paper's claim is deliberately narrow: it is a feasibility
+result about the present public data landscape for
+trajectory-level CRC, produced under rules strict enough that a
+positive answer would have meant something.
+
+\section{Background and related work}
+
+\paragraph{Conformal risk control.} CRC
+\citep{angelopoulos2022conformal} generalises conformal
+prediction from coverage to expected-loss control: for a
+monotone loss $L(i, \lambda) = \mathbf{1}\{\text{failed}(i)\}
+\cdot \mathbf{1}\{S(i) \le \lambda\}$ in a threshold $\lambda$
+on a score $S$, choosing the largest $\lambda$ whose corrected
+empirical risk $(\sum_i L(i,\lambda) + 1)/(n+1)$ stays below
+$\alpha$ on a calibration sample controls the expected loss at
+$\alpha$ under exchangeability. We use this threshold rule
+unchanged; the trajectory-level content is in the score and in
+the split discipline (Section 3).
+
+\paragraph{Learned step scorers.} Process reward models score
+individual steps of a reasoning trace: trained on human step
+labels \citep{lightman2023verify} or on automatic process
+supervision \citep{wang2024mathshepherd}, and lifted to
+multi-step agent trajectories by AgentPRM
+\citep{xi2025agentprm}. Trace-risk modelling without guarantees
+exists as well (e.g.\ SafetyDrift's absorbing-Markov-chain
+risk model over agent traces \citep{dhodapkar2026safetydrift}). None of these places a distribution-free
+finite-sample guarantee over the learned score, prices
+abstention against a pre-registered ceiling, or evaluates the
+construction as a feasibility question with frozen data floors.
+Our delta is the guarantee, the abstention pricing, and the
+feasibility discipline --- not a better scorer; had the census
+found eligible populations, the confirmatory signal would have
+been a standard automatically-trained step scorer of exactly
+this family, calibrated by CRC.
+
+\paragraph{Corpora.} The census covers the two public
+collections that survived the programme's counting screen: the
+SWE-smith trajectory release (trajectories of SWE-agent driven
+by Claude models on synthetic software-engineering tasks, in
+three message formats) and CoderForge-Preview (OpenHands
+trajectories driven by Qwen3-Coder-480B on tasks from three
+sources), the latter documented by the SWE-Critix construction
+\citep{swecritix2026}. Corpora excluded at the counting stage
+(HAL slices, Open-SWE-Traces, earlier candidates) are excluded
+for counted, documented reasons in the programme record and are
+not re-litigated here.
+
+\section{Method}
+
+\subsection{Trajectory-level CRC (T-CRC)}
+
+A trajectory $i$ has steps $1 \dots T_i$ and a binary outcome
+(failed / passed) under its benchmark's own pass condition. A
+per-step scorer $s(i, t) \in [0,1]$ estimates step-level failure
+propensity; the trajectory score is the hazard aggregation
+$S_{\mathrm{haz}}(i) = 1 - \prod_{t} (1 - s(i,t))$, with
+$S_{\max}$ and $S_{\mathrm{mean}}$ as descriptive variants. The
+confirmatory pipeline: fit the scorer on a \emph{fit} split;
+pass a mechanical signal-quality gate on a disjoint \emph{gate}
+split (the score must beat the trajectory-length baseline
+$S_{\mathrm{len}}(i) = T_i$ decisively: AUC $\ge 0.65$,
+$\Delta$AUC $\ge +0.10$, bootstrap 95\% CI for the difference
+excluding 0 --- a learned signal that cannot beat ``how long
+did it run'' has no business being certified); select $\lamhat$
+by the CRC rule on a disjoint \emph{calibration} split; evaluate
+once on a disjoint \emph{test} split, reporting risk and
+abstention only as a pair. Because the gate event is measurable
+with respect to the fit and gate splits, which are disjoint from
+calibration and test, conditioning on it does not alter the
+calibration distribution: the guarantee for the gated pipeline
+is the unconditional CRC statement. A guarantee-alert rule (a
+test-risk confidence interval lying entirely above $\alpha$) and
+an abstention ceiling (40\% at $\alpha = 0.10$) complete the
+verdict logic, frozen as an exhaustive decision table over
+per-family outcomes.
+
+\subsection{The feasibility protocol (frozen)}
+
+Eligibility of a population is decided from a \emph{census}
+alone --- artefact-level quantities computed before any signal,
+gate, or split outcome exists --- under these frozen criteria:
+(i) at least 800 usable trajectories (a step log and a final
+evaluation both present); (ii) base failure rate in
+$[0.10, 0.40]$ for the confirmatory tier, $(0.40, 0.50]$ for a
+descriptive-only tier, outside $[0.10, 0.50]$ ineligible --- the
+band reflects the method's operating point: below 0.10 the
+class-count rule below cannot be met at feasible sizes, above
+0.50 no threshold at $\alpha = 0.10$ can be non-vacuous against
+a 40\% abstention ceiling; (iii) a four-way split realisation
+(fit 40 / gate 20 / calibration 20 / test 20, by task group,
+stratified by group outcome composition) meeting the exact
+Clopper--Pearson floors $n_{\mathrm{cal}} \ge 160$ and
+$n_{\mathrm{test}} \ge 160$ --- $n = 150$ gives a worst-case
+95\% half-width of 0.0513, $n = 160$ gives 0.0495, and the floor
+is set so the interval can resolve the $\alpha = 0.10$ decision
+--- and at least 40 successes and 40 failures in each of gate,
+calibration, and test.
+
+\paragraph{Outcome binarisation as a frozen function.} The
+subtlest criterion is the outcome itself. A population's
+successes are defined by its benchmark's own pass condition,
+applied by a rule fixed before the census sees any value: for a
+boolean field, success is its true value; for a numeric field
+with observed distinct-value set $V$, success is ``value $= 1$''
+if every value in $V$ is exactly 0 or 1, ``value exactly $1.0$''
+(a full pass; fractional values are partial passes) if every
+value lies in $[0,1]$, and \emph{ineligible} if any value lies
+outside $[0,1]$ or is non-numeric --- no clause may be selected
+or invented after $V$ is observed. This is the criterion that
+decides the CoderForge family, and we flag its strictness as a
+deliberate design choice: a sentinel value that the benchmark
+does not document cannot be assigned a meaning by the analyst
+without converting the census into the post-hoc exercise it
+exists to prevent.
+
+\paragraph{Splits and leakage.} All splits are by task group
+(every trajectory of a task in exactly one split), because the
+text features of any learned scorer make task-identity leakage
+a concrete failure mode when the same task appears on both
+sides of a split. Task identity itself is a census item
+(Section 4).
+
+\subsection{Programme context}
+
+The registration executed here is the programme's fourth
+artefact: a v1 pilot on a HAL corpus (Section 5.4), a V2 design
+retired at design review, a V3 design that found no countable
+corpus at its floors, and this V4 registration over the
+populations that a dedicated counting pass (artefact-level
+counts and documented facts only, no outcome values) found
+standing. The registration was scored before execution by a
+fresh design-stage tester (design quality 7/10; venue screen
+9/12, low flag, at this journal) and its execution was audited
+after the fact by a second fresh tester (Section 8).
+
+\section{Census protocol}
+
+Each population was censused by streaming its artefact files at
+the revision counted in the prior screen (CoderForge-Preview at
+revision \texttt{060fca96}; SWE-smith trajectories at
+\texttt{08e109b4}), one file at a time with per-file checkpoints,
+retaining only aggregates. Per population the census records:
+rows in file vs.\ usable rows; parse failures (zero in all nine
+populations); the outcome field's distinct values, verbatim,
+with counts; the task-identifier field as found and the number
+of distinct tasks; median and mean trajectory length in steps;
+and step coverage. SWE-smith populations are (message format
+$\times$ model) cells of one release, filtered on its model
+field; its format cells share one task pool --- the xml and
+ticks cells for the same model are the same trajectories in
+different formats, with identical outcome counts --- and its
+cells are therefore never treated as independent corpora.
+
+\paragraph{Task identity.} SWE-smith carries \texttt{instance\_id}
+as a column. CoderForge carries no task-id column; schema
+identification at census found the task identity in the
+artefact's \texttt{image} field (the per-task environment image;
+mechanically verified on one inspected file of 148 rows:
+\texttt{trajectory\_id} minus its run suffix equals the image
+string on 148/148 rows). The final distinct counts --- CF-1
+4{,}492 images over 77{,}169 trajectories, CF-2 444 over
+148{,}001, CF-3 4{,}274 over 32{,}964 --- show these are
+per-repository environment images of varying granularity, not
+per-instance identifiers (near-instance only for CF-3).
+Grouping by image would have been task-conservative (no task
+can straddle splits when grouped by a coarser key) but coarser
+than task grouping. An independent adjudication of this
+identification, its timing (recorded before any eligibility
+decision), and its consequences is part of the programme record
+and is summarised in Section 8: it changes no outcome, since
+CoderForge's eligibility fails on the outcome encoding under
+any reading of the task-identity question.
+
+\section{Results}
+
+\subsection{The census}
+
+Table~\ref{tab:census} is the result. Of 332{,}499 censused
+trajectories (the sum over the nine registered populations;
+the two families partially share the SWE-smith task universe,
+and SS-2/SS-3 duplicate one another's trajectories across
+formats), \textbf{no population is eligible} under the frozen
+criteria, and no population reached the split realisation: the
+sample draw, the split-formation checks, and eligibility leg
+(iii) were never evaluated for any population, because every
+population failed at the outcome stage --- leg (ii) for
+SWE-smith, the binarisation rule for CoderForge. The programme
+verdict under the registration's own decision table (both
+families without an eligible population) is the pre-registered
+\textbf{H-DATA} outcome: the confirmatory programme does not
+run, and the census is the finding.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrrrl}
+\toprule
+Population & Usable & Tasks & Binding quantity & Outcome\\
+\midrule
+CF-1 (SWE-Rebench source) & 77{,}169 & 4{,}492 & $-$1.0 on 255 rows (0.33\%) & ineligible\\
+CF-2 (SWE-Smith source) & 148{,}001 & 444 & $-$1.0 on 367 rows (0.25\%) & ineligible\\
+CF-3 (R2E-Gym source) & 32{,}964 & 4{,}274 & $-$1.0 on 278 rows (0.84\%) & ineligible\\
+SS-1 (tool, Claude 3.7) & 17{,}715 & 9{,}143 & base failure 0.6102 & ineligible\\
+SS-2 (xml, Claude 3.7) & 18{,}457 & 11{,}824 & base failure 0.5447 & ineligible\\
+SS-3 (ticks, Claude 3.7) & 18{,}457 & 11{,}824 & base failure 0.5447 & ineligible\\
+SS-4 (tool, Claude 3.5) & 5{,}751 & 1{,}965 & base failure 0.5921 & ineligible\\
+SS-5 (xml, Claude 3.5) & 7{,}091 & 2{,}223 & base failure 0.5875 & ineligible\\
+SS-6 (ticks, Claude 3.5) & 6{,}894 & 2{,}222 & base failure 0.5863 & ineligible\\
+\bottomrule
+\end{tabular}
+\caption{The feasibility census. ``Binding quantity'' is the
+first frozen criterion each population fails: for CoderForge,
+the outcome value set contains $-1.0$, which the frozen
+binarisation function's third clause makes census-ineligible;
+for SWE-smith, the base failure rate exceeds the 0.50 ceiling
+of eligibility leg (ii) (leg (i), usable $\ge 800$, passes for
+all six). Usable counts reproduce the prior counting screen
+exactly; parse failures are zero in all nine populations.
+Median trajectory lengths: CF 48--59 steps, SS 15--30 steps.}
+\label{tab:census}
+\end{table}
+
+\subsection{Barrier 1: base-rate concentration (SWE-smith)}
+
+Every Claude cell of the SWE-smith release fails at a base
+failure rate between 0.545 and 0.610. This is not a threshold
+artefact of the census: the populations are large (5{,}751 to
+18{,}457 usable trajectories), the outcome field is an
+unambiguous boolean (\texttt{resolved}), and the rates are what
+they are --- SWE-agent driven by these models resolves roughly
+two in five of these synthetic tasks. A confirmatory method
+whose registered operating point is $\alpha = 0.10$ with a 40\%
+abstention ceiling cannot certify such populations without
+abstaining on nearly everything, which the anti-vacuity
+discipline of the protocol exists to refuse. The band's ceiling
+is doing intended work here.
+
+\subsection{Barrier 2: an uninterpretable outcome value (CoderForge)}
+
+CoderForge's \texttt{reward} is a float taking values 1.0
+(89{,}501 $+$ 44{,}739 $+$ 20{,}904 rows across the three
+sources), 0.0, and $-1.0$ --- 255, 367, and 278 rows in CF-1,
+CF-2, CF-3 respectively. No definition of the $-1.0$ value
+appears in the artefact documentation or in the counting and
+census records we inspected; plausible readings exist (an
+execution or evaluation failure sentinel is the obvious one),
+but the frozen binarisation has no clause for a value outside
+$[0,1]$, by design, and inventing one at census time is exactly
+the move the pre-registration prohibits. All three populations
+are therefore ineligible on the outcome encoding.
+
+\paragraph{Exploratory counterfactuals (unregistered).} To make
+the cost of that discipline visible --- and only for that
+purpose --- we record what two unregistered readings of $-1.0$
+would have given. Excluding the $-1.0$ rows, the CF failure
+shares are CF-1 0.4183, CF-2 0.3938, CF-3 0.3605. Counting
+$-1.0$ as failure gives CF-1 0.4202, CF-2 0.3953, CF-3 0.3659.
+The band assignment is the same under both readings: CF-2 and
+CF-3 would have sat inside the confirmatory band, CF-1 in the
+descriptive band (it did not attain descriptive-tier status,
+which is a registered status, and we do not describe it as a
+descriptive-tier population). For CF-2 and CF-3 the binding
+barrier is thus the outcome encoding, not the band; that is a
+statement about documentation, obtainable only because the
+registered rule refused to make it silently.
+
+\subsection{Machinery evidence}
+
+The bottleneck is not the guarantee machinery. The programme's
+validation harness (48 checks, all passing) includes the
+classical anchors --- single-turn CRC reproducing its nominal
+risk (mean test risk 0.1000 at $\alpha = 0.10$), planted
+-dependence synthetics controlled by the hazard score (mean
+risk 0.0154) --- and a synthetic prefix anchor for the full
+learned pipeline eventually intended for the confirmatory runs:
+on synthetic traces with a planted per-step error signal, the
+frozen feature map, stacked heads, and hazard aggregation
+recover the signal (gate AUC 0.995) and CRC controls the risk
+at $\alpha = 0.10$ (test risk 0.080), at an abstention of
+0.420 --- above the 40\% ceiling, so the anchor demonstrates
+risk control, not a confirmatory pass, and we report it as
+such. What the census establishes is that this machinery
+currently has no eligible natural population to run on.
+
+\subsection{The prior pilot, in its place}
+
+Under the programme's separate v1 registration, one HAL corpus
+(tau-bench airline) was run end-to-end with a frozen heuristic
+signal ladder: base failure 0.84, calibration AUC 0.482,
+threshold at abstain-all for every $\alpha$, abstention 100\%
+at $\alpha = 0.10$ --- a falsifier-direction result for that
+signal class on that corpus. It is v1 evidence, cited for the
+programme's history; the present verdict does not rest on it,
+and its corpus's 0.84 base rate would itself be ineligible
+under the present band, which post-dates it and has no
+retroactive effect on its recorded verdict.
+
+\section{Discussion}
+
+\paragraph{What the result says.} Under criteria frozen before
+outcomes were seen, the two public software-engineering agent
+trajectory collections that survive a counted screen cannot
+support confirmatory trajectory-level conformal risk control:
+one family's populations all sit above the base-rate ceiling,
+and the other's outcome field cannot be binarised without
+inventing a meaning for an undocumented value. Both barriers
+are properties of the data landscape, not of the guarantee:
+the same protocol, unchanged, would have run on any population
+that met it, and its machinery anchors pass. Pre-registration
+is what makes this a result rather than an excuse: the H-DATA
+outcome was one of the registration's pre-declared verdicts,
+reached by its own decision table, with floors and bands that
+were never adjusted after the data arrived.
+
+\paragraph{What it does not say.} It does not say trajectory
+-level CRC fails on agent traces: no eligible population was
+ever run, and the one historical run (Section 5.4) tested a
+heuristic ladder, not the learned signal. It does not say the
+band is ``right'' in any absolute sense: the band encodes an
+operating point ($\alpha = 0.10$, 40\% abstention ceiling), and
+a programme targeting a different operating point would draw
+it elsewhere --- but would have to draw it in advance, as this
+one did. And it does not generalise beyond its census: two
+artefact families, one task domain, nine populations.
+
+\paragraph{The cost of the discipline, made visible.} The
+exploratory counterfactuals of Section 5.2 are the honest
+price tag of the frozen binarisation: two populations that a
+post-hoc analyst would very likely have run (failure shares
+0.36--0.39 under either plausible reading of $-1.0$) were
+turned away over 0.25--0.84\% of rows whose meaning the
+artefact does not document. We judge that price correctly
+paid --- a guarantee certified on an invented outcome
+definition is not a guarantee --- but it is a price, and
+corpus publishers can reduce it to zero for everyone
+(Section 7).
+
+\section{Recommendations}
+
+We label these as recommendations; each is tied to the census
+fact that motivates it, and none is an experimental finding.
+
+\begin{enumerate}
+\item \textbf{Document sentinel outcome values, or encode
+execution failure separately from task failure.} An undefined
+$-1.0$ reward value, present in all three CoderForge sources
+at 0.25--0.84\% of rows, is the sole reason three countable
+populations could not be binarised under a pre-registered
+rule.
+\item \textbf{Ship the benchmark's pass/fail outcome as a
+boolean field.} SWE-smith's \texttt{resolved} boolean was the
+one outcome encoding in this census that required no
+interpretation whatsoever.
+\item \textbf{Carry task/instance identifiers as a column.}
+SWE-smith's \texttt{instance\_id} column made task-grouped
+splitting unambiguous; CoderForge has no task-id column, and
+its environment-image field is a per-repository identifier
+whose granularity varies by source (444 to 4{,}492 distinct
+values over 33{,}000--148{,}000 trajectories).
+\end{enumerate}
+
+\section{Limitations}
+
+The census covers two artefact families in one task domain
+(software-engineering agents); other domains' corpora were
+excluded at the programme's counting stage for documented
+reasons and are outside this paper's claims. The CoderForge
+task-identity identification (Section 4) rests on mechanical
+verification of one inspected file and an adjudicated
+interpretation; it is outcome-immaterial here but would matter
+in any future run on this artefact, where per-instance
+identifiers would have to come from the publisher or from the
+trajectories' own content under a new registration. The
+exploratory rates of Section 5.2 are unregistered
+counterfactuals, reported for interpretation; neither reading
+of $-1.0$ is endorsed. The synthetic machinery evidence
+(Section 5.3) uses planted signals and demonstrates control,
+not confirmatory performance. Finally, the eligibility band
+and floors are design choices: we argue for them from the
+method's operating point, and other pre-registered choices are
+possible --- what is not optional, on this paper's argument,
+is making them in advance.
+
+\paragraph{Falsifier bookkeeping.} The programme sits inside a
+larger area whose pre-registered falsifier requires
+non-vacuous trajectory-level control (at most 40\% abstention
+at target risk) on at least two of three trace corpora: a HAL
+task family, own-lab traces, and METR runs. The HAL family
+carries the v1 falsifier-direction result; the other two are
+untested; the falsifier has therefore neither fired nor been
+passed. The present census's families are none of those three,
+and its results count neither for nor against that falsifier.
+H-DATA is this programme's verdict under its own registration;
+any area-level kill decision is a separate, recorded act by
+the programme's owner, not a consequence this paper asserts.
+
+\paragraph{Reproducibility.} Every number in Table~\ref{tab:census}
+recomputes from the census records produced by the programme's
+census code over the two artefacts at the revisions named in
+Section 4. On freeze integrity, precisely: the programme's
+earlier registration chains (V2, V3) and the present
+registration chain's non-registration files verify against
+their recorded hashes today; the present registration's Part I
+was hash-verified at its pre-execution design-stage check, and
+its Part II execution record was appended under the
+registration's own rule. The code, registrations, census
+records, and tester reports are deposited in a public
+repository: \url{https://github.com/ranadhir19/trajectory-conformal-census}.
+
+\begin{thebibliography}{9}
+\small
+\bibitem[Angelopoulos et~al.(2022)]{angelopoulos2022conformal}
+Angelopoulos, A.~N., Bates, S., Fisch, A., Lei, L., and
+Schuster, T. (2022). Conformal risk control.
+\emph{arXiv:2208.02814}.
+
+\bibitem[Lightman et~al.(2023)]{lightman2023verify}
+Lightman, H., Kosaraju, V., Burda, Y., Edwards, H., Baker, B.,
+Lee, T., Leike, J., Schulman, J., Sutskever, I., and Cobbe, K.
+(2023). Let's verify step by step. \emph{arXiv:2305.20050}.
+
+\bibitem[Wang et~al.(2024)]{wang2024mathshepherd}
+Wang, P., Li, L., Shao, Z., Xu, R.~X., Dai, D., Li, Y., Chen,
+D., Wu, Y., and Sui, Z. (2024). Math-Shepherd: Verify and
+reinforce LLMs step-by-step without human annotations.
+\emph{arXiv:2312.08935}.
+
+\bibitem[Xi et~al.(2025)]{xi2025agentprm}
+Xi, Z., Liao, C., Li, G., Yang, Y., Chen, W., Zhang, Z., Wang,
+B., Jin, S., Zhou, Y., Guan, J., Wu, W., Ji, T., Gui, T.,
+Zhang, Q., and Huang, X. (2025). AgentPRM: Process reward
+models for LLM agents via step-wise promise and progress.
+\emph{arXiv:2511.08325}.
+
+\bibitem[Dhodapkar and Pishori(2026)]{dhodapkar2026safetydrift}
+Dhodapkar, A. and Pishori, F. (2026). SafetyDrift: Predicting
+when AI agents cross the line before they actually do.
+\emph{arXiv:2603.27148}.
+
+\bibitem[Hu and Chong(2026)]{swecritix2026}
+Hu, J. and Chong, C.~Y. (2026). SWE-Critix: Post-training
+generalist verifiers for assessing coding-agent trajectories.
+\emph{arXiv:2610.13356}.
+\end{thebibliography}
+
+\end{document}

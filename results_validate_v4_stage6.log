@@ -1,0 +1,55 @@
+STAGE 1: imports
+  [PASS] code/tcrc.py + code/synth.py import 
+STAGE 2: unit checks
+  [PASS] signal error rung 
+  [PASS] signal marker rung 
+  [PASS] signal retry rung 
+  [PASS] signal clean 
+  [PASS] signal no-error view drops error rung 
+  [PASS] S_max aggregation 
+  [PASS] S_haz aggregation 
+  [PASS] empty trajectory scores 
+  [PASS] CRC threshold hand example (lam=0.2)
+  [PASS] CRC threshold abstain-all case 
+  [PASS] evaluate pair 
+  [PASS] betting CS on zero stream stays low (CS=(0.01,0.99))
+  [PASS] betting CS on one stream rises (CS=(0.98,0.99))
+STAGE 3: ANCHOR A — single-turn CRC behaviour
+  [PASS] single-turn mean test risk <= alpha + 0.01 (mean risk=0.1000, alpha=0.1)
+  [PASS] single-turn near-tight (mean risk >= alpha - 0.04) (mean risk=0.1000)
+  [PASS] single-turn non-vacuous abstention in [0.5, 0.9] (mean abstention=0.753)
+STAGE 4: ANCHOR B — synthetic planted-dependence trajectories
+  [PASS] T-CRC controls at alpha (dependent, S_haz) (mean risk=0.0154, alpha=0.1)
+  [PASS] T-CRC non-vacuous (dependent, S_haz) (mean abstention=0.454)
+  [PASS] T-CRC controls at alpha (dependent, S_max) (mean risk=0.0000, alpha=0.1)
+  [PASS] T-CRC controls at alpha (independent-control, S_haz) (mean risk=0.0023, alpha=0.1)
+  [PASS] T-CRC non-vacuous (independent-control, S_haz) (mean abstention=0.493)
+  [PASS] T-CRC controls at alpha (independent-control, S_max) (mean risk=0.0000, alpha=0.1)
+STAGE 5: data-integrity — canonical schema
+  [PASS] synthetic records satisfy canonical step schema 
+STAGE 6: V4 frozen-rule machinery + synthetic prefix anchor
+  [PASS] F1 binarise {0,1} -> clause1 
+  [PASS] F1 binarise {0,.5,1} -> clause2, success iff ==1 
+  [PASS] F1 binarise {True,False} -> clause1 
+  [PASS] F1 binarise {0,2} -> ineligible 
+  [PASS] F1 binarise strings -> ineligible 
+  [PASS] F1 binarise empty -> ineligible 
+  [PASS] F1 SS boolean set -> boolean rule 
+  [PASS] F1 SS mixed types -> ineligible 
+  [PASS] F2 (PASS,PASS) -> SUPPORTED 
+  [PASS] F2 (FAIL,FAIL) -> KILL 
+  [PASS] F2 (FAIL(ALERT),FAIL) -> KILL 
+  [PASS] F2 V3-killer config: primaries FAIL + repl PASS -> KILL only 
+  [PASS] F2 (PASS,FAIL) -> MIXED 
+  [PASS] F2 (NO-TEST,NO-TEST) -> H-DATA 
+  [PASS] F2 single-family SUPPORT needs replication PASS 
+  [PASS] F2 single-family FAILURE 
+  [PASS] F3 split assignment deterministic 
+  [PASS] F3 split proportions within +/-3pp on benign groups (counts={'fit': 481, 'gate': 241, 'cal': 238, 'test': 240})
+  [PASS] F4 sample draw reaches cap with whole groups 
+  [PASS] F4 sample draw takes whole small population 
+  [PASS] F5 parser: 2 steps, error bit + retry bit set 
+  [PASS] F6 anchor: planted signal recovered (AUC_haz >= 0.70) (AUC=0.995)
+  [PASS] F6 anchor: CRC at alpha=0.10 non-vacuous on synthetic (risk=0.080, abst=0.420)
+  [PASS] F7 prefix features deterministic + 150 wide 
+OVERALL: PASS

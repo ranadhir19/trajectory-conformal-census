@@ -1,0 +1,16 @@
+# PREREGISTRATION V3 — freeze record, Area 2 (trajectory-conformal-risk-control)
+# Frozen: 2026-10-31T17:22:31Z (2026-10-31 13:22 EDT), before any V3 census
+# quantity, feasibility parse of a V3 population, gate result, or experiment
+# result existed. The only prior data contact is the metadata-level counting
+# in COUNTING_PASS_O3.md.
+# Authority: Ranadhir Ghosh's 2026-10-31 directive ("make the best paper out
+# of it and submit to the journal as it fits"; venue TMLR decided in the same
+# directive), on top of his 2026-10-31 proceed-directive adopting Decision 2 =
+# option (b), Research_Pilots_Decision_Packet_2026-10-31.md (see STATE.md).
+# Design executed: SOLUTION_DESIGN_V3.md §5 (repairs of SOLUTION_DESIGN_V2.md).
+# V1/V2 freeze integrity re-verified at this freeze:
+#   sha256sum -c PREREGISTRATION_V2.sha256 -> both files OK.
+# Verify: sha256sum -c PREREGISTRATION_V3.sha256  (run in this directory)
+9e68440316730c7924c5bd6864e9b7c3b7b1f7b4a0cd44b18dfe669822f80d02  EXPERIMENTS_V3.md
+475313085f4c5b7a67cafc8b014ad8c6a15775cf4256819c981e282d5e6149cd  SOLUTION_DESIGN_V3.md
+f5cda540309810bce80d47a2ab9bd79384650c3f6c724cdb473bcc89793aac1a  COUNTING_PASS_O3.md

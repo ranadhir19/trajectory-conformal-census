@@ -1,0 +1,9 @@
+# Pinned programme environment (code/BUILD_LOG_V4.md), Python 3.12.3.
+# validate.py needs only numpy, scipy and scikit-learn; the census
+# runners additionally need pyarrow and huggingface_hub (Tier 2).
+numpy==2.5.4
+scipy==1.18.1
+scikit-learn==1.9.1
+pandas==3.1.0
+pyarrow==26.0.0
+huggingface_hub==2.4.0

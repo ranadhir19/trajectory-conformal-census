@@ -1,0 +1,42 @@
+{
+ "population": "SS-6",
+ "census": {
+  "n_in_file": 6894,
+  "n_usable": 6894,
+  "n_parse_fail": 0,
+  "outcome_values": {
+   "True": 2852,
+   "False": 4042
+  },
+  "n_with_task": 6894,
+  "n_distinct_tasks": 2222,
+  "task_rule": {
+   "field:instance_id": 6894
+  },
+  "median_n_steps": 15.0,
+  "mean_n_steps": 21.86248912097476,
+  "step_cov_ge3": 1.0,
+  "token_levels": {
+   "3": 6894
+  },
+  "models": {
+   "claude-3-5-sonnet-20241022": 6894
+  },
+  "population": "SS-6",
+  "artefact": "SWE-bench/SWE-smith-trajectories",
+  "revision": "08e109b4a59eaeebf80e4675cd125d42e7ac99a4",
+  "files": [
+   "data/ticks-00000-of-00008.parquet",
+   "data/ticks-00001-of-00008.parquet",
+   "data/ticks-00002-of-00008.parquet",
+   "data/ticks-00003-of-00008.parquet",
+   "data/ticks-00004-of-00008.parquet",
+   "data/ticks-00005-of-00008.parquet",
+   "data/ticks-00006-of-00008.parquet",
+   "data/ticks-00007-of-00008.parquet"
+  ]
+ },
+ "ss_resolved_rule": "boolean",
+ "base_failure": 0.5863069335654192,
+ "verdict": "ineligible: census legs (a)/(b)"
+}

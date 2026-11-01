@@ -1,0 +1,36 @@
+{
+ "n_in_file": 17715,
+ "n_usable": 17715,
+ "n_parse_fail": 0,
+ "outcome_values": {
+  "True": 6906,
+  "False": 10809
+ },
+ "n_with_task": 17715,
+ "n_distinct_tasks": 9143,
+ "task_rule": {
+  "field:instance_id": 17715
+ },
+ "median_n_steps": 30.0,
+ "mean_n_steps": 34.95563082133785,
+ "step_cov_ge3": 1.0,
+ "token_levels": {
+  "3": 17715
+ },
+ "models": {
+  "claude-3-7-sonnet-20250219": 17715
+ },
+ "population": "SS-1",
+ "artefact": "SWE-bench/SWE-smith-trajectories",
+ "revision": "08e109b4a59eaeebf80e4675cd125d42e7ac99a4",
+ "files": [
+  "data/tool-00000-of-00008.parquet",
+  "data/tool-00001-of-00008.parquet",
+  "data/tool-00002-of-00008.parquet",
+  "data/tool-00003-of-00008.parquet",
+  "data/tool-00004-of-00008.parquet",
+  "data/tool-00005-of-00008.parquet",
+  "data/tool-00006-of-00008.parquet",
+  "data/tool-00007-of-00008.parquet"
+ ]
+}
